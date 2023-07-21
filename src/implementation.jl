@@ -92,13 +92,24 @@ function NFFTPlan(k::Matrix{T}, N::NTuple{D,Int}; dims::Union{Integer,UnitRange{
                   params.precompute == POLYNOMIAL ) &&
                      params.blocking && length(dims_) == D
 
+    # @info "In NFFT implementation, calcBlocks = $calcBlocks, dims_ = $dims_, D = $D, params = $params"
+    
     blocks, nodesInBlocks, blockOffsets, idxInBlock, windowTensor = precomputeBlocks(k, Ñ, params, calcBlocks)
+
+    # @info "blocks = $blocks, nodesInBlocks = $nodesInBlocks, blockOffsets = $blockOffsets, idxInBlock = $idxInBlock, windowTensor = $windowTensor"
+    # @info "In NFFT implementation, after precomputeBlocks."
 
     windowLinInterp, windowPolyInterp, windowHatInvLUT, deconvolveIdx, B =
             precomputation(k, N[dims_], Ñ[dims_], params)
 
+    # @info "windowLinInterp = $windowLinInterp, windowPolyInterp = $windowPolyInterp, windowHatInvLUT = $windowHatInvLUT, deconvolveIdx = $deconvolveIdx, B = $B"
+    # @info "In NFFT implementation, after precomputation."
+
     U = params.storeDeconvolutionIdx ? N : ntuple(d->0,D)
+    # @info "In NFFT implementation, U."
+
     tmpVecHat = Array{Complex{T},D}(undef, U)
+    # @info "In NFFT implementation, tmpVecHat."
 
     NFFTPlan(N, NOut, J, k, Ñ, dims_, params, FP, BP, tmpVec, tmpVecHat,
                        deconvolveIdx, windowHatInvLUT, windowLinInterp, windowPolyInterp,
@@ -179,7 +190,8 @@ function LinearAlgebra.mul!(f::StridedArray, pl::Adjoint{Complex{T},<:NFFTPlan{T
     consistencyCheck(p, f, fHat)
 
     t1 = @elapsed @inbounds convolve_transpose!(p, fHat, p.tmpVec)
-    t2 = @elapsed p.backwardFFT * p.tmpVec
+    # t2 = @elapsed p.backwardFFT * p.tmpVec
+    t2 = p.backwardFFT * p.tmpVec
     t3 = @elapsed @inbounds deconvolve_transpose!(p, p.tmpVec, f)
     if verbose
         @info "Timing: conv=$t1 fft=$t2 deconv=$t3"

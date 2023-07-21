@@ -331,14 +331,21 @@ end
 
 @noinline function fillBlock!(p::NFFTPlan{T,D,1}, fHat, block, nodesInBlock, off, L::Val{Z}, scale, 
                               idxInBlock, winTensor, winPoly) where {T,D,Z}
+  
+  # @info "In convolution.jl function fillBlock!, D = $D, Z = $Z"
+
   if (Threads.nthreads() == 1 || !NFFT._use_threads[]) &&
       (D >= 3 && Z >= 16) || (D == 2 && Z >= 16) # magic 
     for (jLocal,j) in enumerate(nodesInBlock)
+      # @info "Before fillOneNode2!"
       fillOneNode2!(p, fHat, block, off, L, scale, j, jLocal, idxInBlock, winTensor, winPoly)
+      # @info "fillOneNode2! is called."
     end
   else
     for (jLocal,j) in enumerate(nodesInBlock)
+      # @info "Before fillOneNode!"
       fillOneNode!(p, fHat, block, off, L, scale, j, jLocal, idxInBlock, winTensor, winPoly)
+      # @info "fillOneNode! is called."
     end
   end
   return
@@ -348,6 +355,10 @@ end
 @generated function fillOneNode!(p::NFFTPlan{T,D,1}, fHat, block, off, L::Val{Z}, scale, 
               j, jLocal, idxInBlock, winTensor, winPoly) where {D,T,Z}
   quote
+    if j < 1
+      @info "j in fillOneNode! is less than 1. j = $j"
+    end
+    
     fHat_ = fHat[j]
 
     @nexprs $(D) d -> ((off_d, tmpWin_d) = precomputeOneNodeBlocking(p.windowLinInterp, winTensor, winPoly, scale, jLocal, d, L,

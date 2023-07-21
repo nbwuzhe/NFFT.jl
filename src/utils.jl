@@ -7,7 +7,8 @@ macro cthreads(loop::Expr)
           #Threads.@threads $loop 
           #@batch per=thread $loop
       else
-          @inbounds $loop
+          # @inbounds $loop
+          $loop
       end
   end)
 end
@@ -85,6 +86,13 @@ end
   quote
     if size_in(p) != size(f) || size_out(p) != size(fHat)
       throw(DimensionMismatch("Data is not consistent with NFFTPlan"))
+    end
+    for nn in CartesianIndices(size(p.blocks))
+      for (ind, val) in enumerate(p.nodesInBlock[nn])
+        if val < 1 || val > length(fHat)
+            Base.throw_boundserror(fHat, val)
+        end
+      end
     end
   end
 end

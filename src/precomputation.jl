@@ -205,6 +205,14 @@ end
 function precomputeOneNodeBlocking(winLin, winTensor::Nothing, winPoly::NTuple{Z, NTuple{X,T}}, scale,
                                    j, d, L, idxInBlock::Matrix) where {T,Z,X}
 
+
+  # @info "In precomputeOneNodeBlocking for POLYNOMIAL fftflag."
+
+  if d > size(idxInBlock,1) || j > size(idxInBlock,2)
+    idxInBlock_size = size(idxInBlock)
+    @info "d and/or k is larger than the size of idxInBlock. d = $d, j = $j, size(idxInBlock) = $idxInBlock_size"
+  end
+
   y, k =idxInBlock[d,j]
   tmpWin =  shiftedWindowEntries(winPoly, k, scale, d, L)
 
